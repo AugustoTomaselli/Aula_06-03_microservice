@@ -1,6 +1,6 @@
 package com.github.cidarosa.ms.produto.exceptions.handler;
 
-import com.github.cidarosa.ms.produto.exceptions.ResourceNotFoundException;
+import com.github.cidarosa.ms.produto.exceptions.DatabaseException;
 import com.github.cidarosa.ms.produto.exceptions.dto.CustomErrorDTO;
 import com.github.cidarosa.ms.produto.exceptions.dto.ValidationErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,15 +18,28 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<CustomErrorDTO> handleGenericException(Exception e,
-                                                                 HttpServletRequest request){
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; //404
+//    @ExceptionHandler(ResourceNotFoundException.class)
+//    public ResponseEntity<CustomErrorDTO> handleGenericException(Exception e,
+//                                                                 HttpServletRequest request){
+//        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; //404
+//        CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(),
+//                "Erro interno esperado", request.getRequestURI());
+//
+//        return ResponseEntity.status(status).body(err);
+//    }
+
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<CustomErrorDTO> handleDatabase(DatabaseException e,
+                                                         HttpServletRequest request){
+
+        HttpStatus status = HttpStatus.CONFLICT; //409
         CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(),
-                "Erro interno esperado", request.getRequestURI());
+                e.getMessage(), request.getRequestURI());
 
         return ResponseEntity.status(status).body(err);
     }
+
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<CustomErrorDTO> handleArgumentNotValid(MethodArgumentNotValidException e,
@@ -60,6 +73,20 @@ public class GlobalExceptionHandler {
         CustomErrorDTO err = new CustomErrorDTO(Instant.now(), status.value(),
                 "Requisição inválida (parâmetro com tipo/formato incorreto).",
                 request.getRequestURI());
+
+        return ResponseEntity.status(status).body(err);
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<CustomErrorDTO> handleGenericException(Exception e,
+                                                                 HttpServletRequest request) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR; // 500
+        CustomErrorDTO err = new CustomErrorDTO(
+                Instant.now(), status.value(),
+                "Erro interno inesperado.",
+                request.getRequestURI()
+        );
 
         return ResponseEntity.status(status).body(err);
     }
